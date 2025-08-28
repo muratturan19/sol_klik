@@ -6,13 +6,40 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 
 # Global state
-left_trigger_key = "a"  # Default left-click trigger key
-right_trigger_key = "b"  # Default right-click trigger key
-stop_key = "q"  # Default key to stop the app
+left_combo_text = "a"  # Default left-click trigger
+right_combo_text = "b"  # Default right-click trigger
+stop_combo_text = "q"  # Default stop trigger
+pause_combo_text = "p"  # Default pause trigger
+
+left_combo = {"a"}
+right_combo = {"b"}
+stop_combo = {"q"}
+pause_combo = {"p"}
+
 left_clicking = False
 right_clicking = False
+paused = False
+
+pressed_keys: set[str] = set()
+combo_active = {"left": False, "right": False, "stop": False, "pause": False}
 
 mouse = Controller()
+
+
+def parse_key_combo(text: str) -> set[str]:
+    """Parse a user supplied key combination string."""
+    return {p.strip().lower() for p in text.split("+") if p.strip()}
+
+
+def normalize_key(key: keyboard.Key) -> str:
+    """Normalize key objects to comparable strings."""
+    try:
+        if key.char:
+            return key.char.lower()
+    except AttributeError:
+        pass
+    name = str(key).split(".")[-1].lower()
+    return name.replace("_l", "").replace("_r", "")
 
 
 def clicker() -> None:
@@ -33,52 +60,99 @@ def clicker() -> None:
 
 
 def on_press(key: keyboard.Key) -> None:
-    """Toggle clicking or stop based on the pressed key."""
-    global left_clicking, right_clicking, left_trigger_key, right_trigger_key, stop_key
-    try:
-        if key.char:
-            k = key.char.lower()
-            if k == left_trigger_key:
-                left_clicking = not left_clicking
-            elif k == right_trigger_key:
-                right_clicking = not right_clicking
-            elif k == stop_key:
-                left_clicking = False
-                right_clicking = False
-    except AttributeError:
-        # Ignore special keys
-        pass
+    """Handle key press events for configured combinations."""
+    global left_clicking, right_clicking, paused
+    k = normalize_key(key)
+    if not k:
+        return
+    pressed_keys.add(k)
+
+    if (
+        not paused
+        and left_combo <= pressed_keys
+        and not combo_active["left"]
+    ):
+        left_clicking = not left_clicking
+        combo_active["left"] = True
+    if (
+        not paused
+        and right_combo <= pressed_keys
+        and not combo_active["right"]
+    ):
+        right_clicking = not right_clicking
+        combo_active["right"] = True
+    if stop_combo <= pressed_keys and not combo_active["stop"]:
+        left_clicking = False
+        right_clicking = False
+        combo_active["stop"] = True
+    if pause_combo <= pressed_keys and not combo_active["pause"]:
+        paused = not paused
+        left_clicking = False
+        right_clicking = False
+        combo_active["pause"] = True
+
+
+def on_release(key: keyboard.Key) -> None:
+    """Track released keys to reset combination state."""
+    k = normalize_key(key)
+    if not k:
+        return
+    pressed_keys.discard(k)
+    if k in left_combo:
+        combo_active["left"] = False
+    if k in right_combo:
+        combo_active["right"] = False
+    if k in stop_combo:
+        combo_active["stop"] = False
+    if k in pause_combo:
+        combo_active["pause"] = False
 
 def start_listener() -> keyboard.Listener:
     """Start a background keyboard listener."""
-    listener = keyboard.Listener(on_press=on_press)
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
     listener.daemon = True
     listener.start()
     return listener
 
 
 def main() -> None:
-    global left_trigger_key, right_trigger_key, stop_key
+    global left_combo_text, right_combo_text, stop_combo_text, pause_combo_text
+    global left_combo, right_combo, stop_combo, pause_combo
+
     st.title("Otomatik Tıklama Aracı")
     st.write(
         "Sol ve sağ tıklamalar için tuşları seçip AYARLA'ya basın. Uygulama açıkken "
         "seçilen tuşlara basarak tıklamayı başlatıp durdurabilirsiniz. Durdurma tuşu "
-        "tıklamaları sonlandırır."
+        "tıklamaları sonlandırır. Duraklatma tuşu tetikleyicileri geçici olarak etkisiz kılar."
     )
 
     left_key_input = st.text_input(
-        "Sol tıklama tetikleyici tuş", value=left_trigger_key, max_chars=1
+        "Sol tıklama tetikleyici tuş (ör. a veya ctrl+a)", value=left_combo_text
     )
     right_key_input = st.text_input(
-        "Sağ tıklama tetikleyici tuş", value=right_trigger_key, max_chars=1
+        "Sağ tıklama tetikleyici tuş (ör. b veya ctrl+b)", value=right_combo_text
     )
-    stop_key_input = st.text_input("Durdurma tuşu", value=stop_key, max_chars=1)
+    stop_key_input = st.text_input(
+        "Durdurma tuşu (ör. q veya ctrl+q)", value=stop_combo_text
+    )
+    pause_key_input = st.text_input(
+        "Duraklatma tuşu (ör. p veya ctrl+p)", value=pause_combo_text
+    )
     if st.button("AYARLA"):
-        left_trigger_key = left_key_input.lower()
-        right_trigger_key = right_key_input.lower()
-        stop_key = stop_key_input.lower()
+        left_combo_text = left_key_input.lower()
+        right_combo_text = right_key_input.lower()
+        stop_combo_text = stop_key_input.lower()
+        pause_combo_text = pause_key_input.lower()
+
+        left_combo = parse_key_combo(left_combo_text)
+        right_combo = parse_key_combo(right_combo_text)
+        stop_combo = parse_key_combo(stop_combo_text)
+        pause_combo = parse_key_combo(pause_combo_text)
+
         st.success(
-            f"Sol '{left_trigger_key}', sağ '{right_trigger_key}', durdurma '{stop_key}' olarak ayarlandı."
+            "Ayarlar güncellendi: "
+            f"sol '{left_combo_text}', sağ '{right_combo_text}', durdurma '{stop_combo_text}', "
+            f"duraklatma '{pause_combo_text}'."
         )
 
     if "listener" not in st.session_state:
