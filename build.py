@@ -5,6 +5,5 @@ if __name__ == "__main__":
         "app.py",
         "--name=sol_klik",
         "--onefile",
-        "--noconsole",
         "--copy-metadata=streamlit",
     ])
