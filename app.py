@@ -168,7 +168,7 @@ if __name__ == "__main__":
     import streamlit as st
     from streamlit.web import cli as stcli
 
-    if st._is_running_with_streamlit:
+    if getattr(st, "_is_running_with_streamlit", False):
         main()
     else:
         sys.argv = ["streamlit", "run", __file__]
