@@ -1,5 +1,6 @@
 import threading
 import time
+import os
 
 import streamlit as st
 from pynput import keyboard
@@ -82,9 +83,8 @@ def on_press(key: keyboard.Key) -> None:
         right_clicking = not right_clicking
         combo_active["right"] = True
     if stop_combo <= pressed_keys and not combo_active["stop"]:
-        left_clicking = False
-        right_clicking = False
         combo_active["stop"] = True
+        os._exit(0)
     if pause_combo <= pressed_keys and not combo_active["pause"]:
         paused = not paused
         left_clicking = False
