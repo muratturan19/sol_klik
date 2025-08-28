@@ -162,6 +162,14 @@ def main() -> None:
         t = threading.Thread(target=clicker, daemon=True)
         t.start()
         st.session_state.clicker_thread = t
-
+    
 if __name__ == "__main__":
-    main()
+    import sys
+    import streamlit as st
+    from streamlit.web import cli as stcli
+
+    if st._is_running_with_streamlit:
+        main()
+    else:
+        sys.argv = ["streamlit", "run", __file__]
+        sys.exit(stcli.main())
