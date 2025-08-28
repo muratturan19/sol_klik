@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 
@@ -6,27 +7,46 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 
 # Global state
-trigger_key = "a"  # Default trigger key
-clicking = False
+left_trigger_key = "a"  # Default left-click trigger key
+right_trigger_key = "b"  # Default right-click trigger key
+stop_key = "q"  # Default key to stop the app
+left_clicking = False
+right_clicking = False
 
 mouse = Controller()
 
+
 def clicker() -> None:
-    """Continuously click the left mouse button at 15 clicks/s."""
-    global clicking
+    """Continuously click the mouse at 15 clicks/s."""
+    global left_clicking, right_clicking
     while True:
-        if clicking:
+        did_click = False
+        if left_clicking:
             mouse.click(Button.left)
+            did_click = True
+        if right_clicking:
+            mouse.click(Button.right)
+            did_click = True
+        if did_click:
             time.sleep(1 / 15)
         else:
             time.sleep(0.1)
 
+
 def on_press(key: keyboard.Key) -> None:
-    """Toggle clicking when the trigger key is pressed."""
-    global clicking, trigger_key
+    """Toggle clicking or exit based on the pressed key."""
+    global left_clicking, right_clicking, left_trigger_key, right_trigger_key, stop_key
     try:
-        if key.char and key.char.lower() == trigger_key:
-            clicking = not clicking
+        if key.char:
+            k = key.char.lower()
+            if k == left_trigger_key:
+                left_clicking = not left_clicking
+            elif k == right_trigger_key:
+                right_clicking = not right_clicking
+            elif k == stop_key:
+                left_clicking = False
+                right_clicking = False
+                os._exit(0)
     except AttributeError:
         # Ignore special keys
         pass
@@ -38,18 +58,30 @@ def start_listener() -> keyboard.Listener:
     listener.start()
     return listener
 
+
 def main() -> None:
-    global trigger_key
+    global left_trigger_key, right_trigger_key, stop_key
     st.title("Otomatik Tıklama Aracı")
     st.write(
-        "Bir tuş seçin, AYARLA'ya basın. Başka bir uygulamaya geçip bu tuşa basarak "
-        "tıklamayı başlatıp durdurabilirsiniz."
+        "Sol ve sağ tıklamalar için tuşları seçip AYARLA'ya basın. Uygulama açıkken "
+        "seçilen tuşlara basarak tıklamayı başlatıp durdurabilirsiniz. Durdurma tuşu "
+        "uygulamayı tamamen kapatır."
     )
 
-    key_input = st.text_input("Tetikleyici tuş", value=trigger_key, max_chars=1)
+    left_key_input = st.text_input(
+        "Sol tıklama tetikleyici tuş", value=left_trigger_key, max_chars=1
+    )
+    right_key_input = st.text_input(
+        "Sağ tıklama tetikleyici tuş", value=right_trigger_key, max_chars=1
+    )
+    stop_key_input = st.text_input("Durdurma tuşu", value=stop_key, max_chars=1)
     if st.button("AYARLA"):
-        trigger_key = key_input.lower()
-        st.success(f"Tetikleyici tuş '{trigger_key}' olarak ayarlandı.")
+        left_trigger_key = left_key_input.lower()
+        right_trigger_key = right_key_input.lower()
+        stop_key = stop_key_input.lower()
+        st.success(
+            f"Sol '{left_trigger_key}', sağ '{right_trigger_key}', durdurma '{stop_key}' olarak ayarlandı."
+        )
 
     if "listener" not in st.session_state:
         st.session_state.listener = start_listener()
