@@ -163,13 +163,36 @@ def main() -> None:
         t.start()
         st.session_state.clicker_thread = t
     
-if __name__ == "__main__":
-    import sys
-    import streamlit as st
-    from streamlit.web import cli as stcli
+# --- Streamlit/EXE uyumlu giriş noktası ---
+import os, sys
 
-    if getattr(st, "_is_running_with_streamlit", False):
+
+def _running_under_streamlit() -> bool:
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        return get_script_run_ctx() is not None
+    except Exception:
+        return False
+
+
+def _run_via_streamlit_cli():
+    try:
+        from streamlit.web import cli as stcli  # yeni sürümler
+    except Exception:
+        import streamlit.cli as stcli  # eski sürümler
+
+    # PyInstaller onefile'da kodlar geçici klasöre açılır
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        script_path = os.path.join(sys._MEIPASS, "app.py")
+    else:
+        script_path = os.path.abspath(__file__)
+
+    sys.argv = ["streamlit", "run", script_path, "--server.headless=true"]
+    raise SystemExit(stcli.main())
+
+
+if __name__ == "__main__":
+    if _running_under_streamlit():
         main()
     else:
-        sys.argv = ["streamlit", "run", __file__]
-        sys.exit(stcli.main())
+        _run_via_streamlit_cli()
