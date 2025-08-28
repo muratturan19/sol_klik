@@ -1,4 +1,3 @@
-import os
 import threading
 import time
 
@@ -34,7 +33,7 @@ def clicker() -> None:
 
 
 def on_press(key: keyboard.Key) -> None:
-    """Toggle clicking or exit based on the pressed key."""
+    """Toggle clicking or stop based on the pressed key."""
     global left_clicking, right_clicking, left_trigger_key, right_trigger_key, stop_key
     try:
         if key.char:
@@ -46,7 +45,6 @@ def on_press(key: keyboard.Key) -> None:
             elif k == stop_key:
                 left_clicking = False
                 right_clicking = False
-                os._exit(0)
     except AttributeError:
         # Ignore special keys
         pass
@@ -65,7 +63,7 @@ def main() -> None:
     st.write(
         "Sol ve sağ tıklamalar için tuşları seçip AYARLA'ya basın. Uygulama açıkken "
         "seçilen tuşlara basarak tıklamayı başlatıp durdurabilirsiniz. Durdurma tuşu "
-        "uygulamayı tamamen kapatır."
+        "tıklamaları sonlandırır."
     )
 
     left_key_input = st.text_input(
