@@ -16,6 +16,6 @@ streamlit run app.py
 
 Tetikleyici tuşu seçip **AYARLA**'ya bastıktan sonra uygulama açık kalırken
 başka bir pencerede seçilen tuşlara basarak sol veya sağ tıklamayı saniyede 15 kez
-başlatıp durdurabilirsiniz. Ayrıca belirlediğiniz durdurma tuşu tıklamaları
+başlatıp durdurabilirsiniz. Ayrıca belirlediğiniz durdurma tuşu uygulamayı
 sonlandırır. İsteğe bağlı olarak duraklatma tuşu ile tetikleyicileri geçici olarak
 devre dışı bırakabilir ve tek tuş yerine `ctrl+p` gibi kombinasyonlar atayabilirsiniz.
