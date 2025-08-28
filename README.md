@@ -19,3 +19,15 @@ başka bir pencerede seçilen tuşlara basarak sol veya sağ tıklamayı saniyed
 başlatıp durdurabilirsiniz. Ayrıca belirlediğiniz durdurma tuşu uygulamayı
 sonlandırır. İsteğe bağlı olarak duraklatma tuşu ile tetikleyicileri geçici olarak
 devre dışı bırakabilir ve tek tuş yerine `ctrl+p` gibi kombinasyonlar atayabilirsiniz.
+
+## Paketleme
+
+Arkadaşınızın herhangi bir kurulum yapmadan çalıştırabileceği tek dosyalık bir sürüm oluşturmak için:
+
+```bash
+pip install -r requirements.txt
+python build.py
+```
+
+Bu komutlar çalıştırıldığında `dist/sol_klik` (Windows'ta `dist/sol_klik.exe`) dosyası oluşur.
+Bu dosyayı hedef işletim sistemiyle aynı platformda paketlemeli ve karşı tarafa göndererek sadece çift tıklayarak çalıştırmasını sağlayabilirsiniz.
