@@ -187,7 +187,14 @@ def _run_via_streamlit_cli():
     else:
         script_path = os.path.abspath(__file__)
 
-    sys.argv = ["streamlit", "run", script_path, "--server.headless=true"]
+    sys.argv = [
+        "streamlit",
+        "run",
+        script_path,
+        "--browser.serverAddress=localhost",
+        "--browser.serverPort=8501",
+        "--global.developmentMode=false",
+    ]
     raise SystemExit(stcli.main())
 
 
