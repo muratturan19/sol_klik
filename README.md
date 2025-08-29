@@ -31,3 +31,13 @@ python build.py
 
 Bu komutlar çalıştırıldığında `dist/sol_klik` (Windows'ta `dist/sol_klik.exe`) dosyası oluşur.
 Bu dosyayı hedef işletim sistemiyle aynı platformda paketlemeli ve karşı tarafa göndererek sadece çift tıklayarak çalıştırmasını sağlayabilirsiniz.
+
+Windows'ta doğrudan PyInstaller komutu kullanmak isterseniz:
+
+```powershell
+pyinstaller app.py --onefile --name PoyrazClicker `
+  --collect-metadata streamlit --collect-data streamlit `
+  --hidden-import streamlit.web.cli `
+  --add-data "app.py;app.py" `
+  --console
+```
